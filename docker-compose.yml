@@ -1,0 +1,118 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: awe-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: awe
+      MYSQL_USER: awe
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: rootsecret
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootsecret"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: awe-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: ../../infra/docker/api/Dockerfile
+    container_name: awe-api
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./apps/api:/var/www/html
+      - ./infra/docker/api/opcache-cli.ini:/usr/local/etc/php/conf.d/zz-opcache-cli.ini:ro
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./apps/api/.env
+    environment:
+      APP_URL: http://localhost:8000
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: awe
+      DB_USERNAME: awe
+      DB_PASSWORD: secret
+      REDIS_HOST: redis
+      QUEUE_CONNECTION: redis
+      CACHE_STORE: redis
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
+  horizon:
+    build:
+      context: ./apps/api
+      dockerfile: ../../infra/docker/api/Dockerfile
+    container_name: awe-horizon
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./apps/api:/var/www/html
+      - ./infra/docker/api/opcache-cli.ini:/usr/local/etc/php/conf.d/zz-opcache-cli.ini:ro
+    env_file:
+      - ./apps/api/.env
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: awe
+      DB_USERNAME: awe
+      DB_PASSWORD: secret
+      REDIS_HOST: redis
+      QUEUE_CONNECTION: redis
+      CACHE_STORE: redis
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
+    command: php artisan horizon
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: ../../infra/docker/web/Dockerfile
+    container_name: awe-web
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+      # Do not anonymously volume-mount .next in dev — it caches stale Turbopack output.
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      WATCHPACK_POLLING: "true"
+    depends_on:
+      - api
+    command: npm run dev -- --hostname 0.0.0.0 --port 3000
+
+volumes:
+  mysql_data:
+  redis_data:
