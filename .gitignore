@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+vendor/
+.pnpm-store/
+
+# Env
+.env
+.env.local
+.env.*.local
+apps/api/.env
+apps/web/.env
+apps/web/.env.local
+
+# Build / cache
+apps/api/bootstrap/cache/*.php
+apps/api/storage/*.key
+apps/api/storage/logs/*
+apps/api/storage/framework/cache/*
+apps/api/storage/framework/sessions/*
+apps/api/storage/framework/views/*
+!apps/api/storage/logs/.gitignore
+!apps/api/storage/framework/cache/.gitignore
+!apps/api/storage/framework/sessions/.gitignore
+!apps/api/storage/framework/views/.gitignore
+apps/web/.next/
+apps/web/out/
+dist/
+coverage/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+infra/docker/data/
+
+# Stray nested build output
+apps/web/apps/
+apps/api/apps/
+apps/api/.phpunit.result.cache
+apps/api/storage/framework/testing/*
+!apps/api/storage/framework/testing/.gitignore
+apps/api/storage/framework/cache/data/*
+!apps/api/storage/framework/cache/data/.gitignore
+*.log
