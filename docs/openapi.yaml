@@ -1,0 +1,161 @@
+openapi: 3.1.0
+info:
+  title: AI WhatsApp Employee API
+  version: 1.0.0-phase1
+  description: Phase 1 public and internal API surface.
+servers:
+  - url: http://localhost:8000
+paths:
+  /api/v1/auth/register:
+    post:
+      operationId: authRegister
+      summary: Register user and first tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, password_confirmation, company_name]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                password: { type: string }
+                password_confirmation: { type: string }
+                company_name: { type: string }
+      responses:
+        "201":
+          description: Created
+  /api/v1/auth/login:
+    post:
+      operationId: authLogin
+      summary: Login and receive Sanctum token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        "200":
+          description: OK
+  /api/v1/auth/me:
+    get:
+      operationId: authMe
+      security: [{ Sanctum: [] }]
+      responses:
+        "200":
+          description: Current user and memberships
+  /api/v1/products:
+    get:
+      operationId: productsList
+      security: [{ Sanctum: [] }]
+      parameters:
+        - $ref: "#/components/parameters/TenantHeader"
+        - name: q
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated products
+    post:
+      operationId: productsCreate
+      security: [{ Sanctum: [] }]
+      parameters:
+        - $ref: "#/components/parameters/TenantHeader"
+      responses:
+        "201":
+          description: Created
+  /api/v1/conversations:
+    get:
+      operationId: conversationsList
+      security: [{ Sanctum: [] }]
+      parameters:
+        - $ref: "#/components/parameters/TenantHeader"
+      responses:
+        "200":
+          description: Inbox list
+  /api/v1/conversations/{conversation}/messages:
+    get:
+      operationId: conversationMessages
+      security: [{ Sanctum: [] }]
+      parameters:
+        - $ref: "#/components/parameters/TenantHeader"
+        - name: conversation
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Thread messages
+    post:
+      operationId: conversationReply
+      security: [{ Sanctum: [] }]
+      parameters:
+        - $ref: "#/components/parameters/TenantHeader"
+        - name: conversation
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "201":
+          description: Human reply queued
+  /internal/v1/ingress/message:
+    post:
+      operationId: internalIngressMessage
+      security: [{ N8nHmac: [] }]
+      summary: Persist inbound WhatsApp message and return AI context pack
+      responses:
+        "200":
+          description: Context pack
+        "409":
+          description: Duplicate wamid
+  /internal/v1/tools/products/search:
+    get:
+      operationId: internalProductSearch
+      security: [{ N8nHmac: [] }]
+      parameters:
+        - name: phone_number_id
+          in: query
+          required: true
+          schema: { type: string }
+        - name: q
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Product hits
+  /internal/v1/tools/escalate:
+    post:
+      operationId: internalEscalate
+      security: [{ N8nHmac: [] }]
+      responses:
+        "201":
+          description: Escalated
+  /internal/v1/egress/message:
+    post:
+      operationId: internalEgressMessage
+      security: [{ N8nHmac: [] }]
+      responses:
+        "201":
+          description: Outbound logged
+components:
+  parameters:
+    TenantHeader:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+  securitySchemes:
+    Sanctum:
+      type: http
+      scheme: bearer
+    N8nHmac:
+      type: apiKey
+      in: header
+      name: X-N8n-Signature
