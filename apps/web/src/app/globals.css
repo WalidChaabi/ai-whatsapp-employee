@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+:root {
+  --shell: #12181a;
+  --shell-line: #232b2d;
+  --canvas: #edeae1;
+  --card: #fbfaf6;
+  --ink: #1a1d19;
+  --ink-soft: #5b6259;
+  --ink-faint: #8b9188;
+  --line: #dad5c6;
+  --safe: #2f6f4e;
+  --safe-bg: #e4eee6;
+  --attn: #b8722a;
+  --attn-bg: #f5e9d8;
+  --urgent: #b0432e;
+  --urgent-bg: #f6e1dc;
+  --sand: #dcd3b8;
+  --radius: 14px;
+  /* Compat aliases used by older pages */
+  --teal: var(--safe);
+  --teal-deep: #1f4e38;
+  --sand-deep: var(--sand);
+  --paper: var(--card);
+  --background: var(--canvas);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-safe: var(--safe);
+  --color-canvas: var(--canvas);
+  --color-card: var(--card);
+  --color-line: var(--line);
+  --color-shell: var(--shell);
+  --font-sans: var(--font-work-sans);
+  --font-display: var(--font-fraunces);
+  --font-mono-ui: var(--font-ibm-plex-mono);
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-work-sans), ui-sans-serif, system-ui, sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: var(--font-fraunces), ui-serif, Georgia, serif;
+}
+
+.font-mono-ui {
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+}
+
+@keyframes signal-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(47, 111, 78, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(47, 111, 78, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(47, 111, 78, 0);
+  }
+}
+
+@keyframes signal-pulse-amber {
+  0% {
+    box-shadow: 0 0 0 0 rgba(184, 114, 42, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(184, 114, 42, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(184, 114, 42, 0);
+  }
+}
+
+.signal-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--safe);
+  flex-shrink: 0;
+  animation: signal-pulse 2.4s infinite;
+}
+
+.signal-dot.amber {
+  background: var(--attn);
+  animation: signal-pulse-amber 2.4s infinite;
+}
+
+@keyframes brand-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes brand-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-brand-rise {
+  animation: brand-rise 700ms ease-out both;
+}
+
+.animate-brand-rise-delay {
+  animation: brand-rise 800ms ease-out 120ms both;
+}
+
+.animate-brand-fade {
+  animation: brand-fade 900ms ease-out 220ms both;
+}
